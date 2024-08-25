@@ -1,0 +1,628 @@
+```{r}
+# Load required libraries 
+library(shiny) 
+library(shinydashboard) 
+library(shinyjs) 
+library(DT) 
+library(readr) 
+library(ggplot2) 
+library(dplyr) 
+library(plotly) 
+
+# Load the food order data 
+food_order <- read_csv("C:\\Users\\User\\Documents\\Biha - Year 2\\DSP 2\\DSP 2 Project\\NY_FOOD_ANALYSIS_CLEAN_DATASET.csv") 
+
+# Data frame for restaurant information 
+restaurants <- data.frame( 
+  
+  Cuisine = c("American", "Italian", "Japanese", "Chinese", "Korean", "Vietnamese", "Med", "Indian", "Mexican", "Thai", "Middle East", "French", "Spanish", "Southern"), 
+  
+  ImageURL = c("https://i.pinimg.com/564x/70/9d/91/709d91ed86334e00b03749c200f32677.jpg", 
+               "https://i.pinimg.com/564x/ab/48/c9/ab48c9f4a58bedc678219370451048b6.jpg", 
+               "https://i.pinimg.com/564x/2d/4a/fe/2d4afe6fc01aacc41b92029b91d5c4da.jpg", 
+               "https://i.pinimg.com/564x/b9/f9/d0/b9f9d01cf5ce5cd07cab196e92e6057a.jpg", 
+               "https://i.pinimg.com/564x/7c/3e/0d/7c3e0d7580fc7a05211787b73c38c350.jpg", 
+               "https://i.pinimg.com/564x/22/25/7d/22257db3ed183e5f5bd9f02368f7cf8c.jpg", 
+               "https://i.pinimg.com/564x/40/76/b8/4076b84660a4353b9053febe21aee886.jpg", 
+               "https://i.pinimg.com/564x/70/9a/a4/709aa42eb472b1a38f3b9abcb1f07060.jpg", 
+               "https://i.pinimg.com/564x/d6/39/aa/d639aa807fab04ad0aedbef720119a95.jpg", 
+               "https://i.pinimg.com/564x/5c/49/24/5c49241cfb9a13a539d1de11750cf813.jpg", 
+               "https://i.pinimg.com/564x/41/61/57/416157a7068493fe859a9b4314320575.jpg", 
+               "https://i.pinimg.com/564x/9b/80/12/9b8012608dd03b039ccacce9249e414b.jpg", 
+               "https://i.pinimg.com/564x/b3/c0/68/b3c068ba129650cda516dabbd3ff3b22.jpg", 
+               "https://i.pinimg.com/564x/de/ee/27/deee27e6e3c57443d884c9083abb2a2e.jpg"), 
+
+  Website = c("https://en.wikipedia.org/wiki/American_cuisine", 
+              "https://www.chefspencil.com/top-25-most-popular-italian-foods-dishes/", 
+              "https://www.japancentre.com/en/page/156-30-must-try-japanese-foods", 
+              "https://www.chinahighlights.com/travelguide/chinese-food/eight-chinese-dishes.htm", 
+              "https://edition.cnn.com/travel/article/best-korean-dishes/index.html", 
+              "https://edition.cnn.com/travel/article/vietnam-food-dishes/index.html", 
+              "https://www.mediterraneanliving.com/21-authentic-mediterranean-food-recipes/", 
+              "https://www.cozymeal.com/magazine/indian-food", 
+              "https://www.chefspencil.com/most-popular-mexican-foods/", 
+              "https://www.rainforestcruises.com/guides/best-thai-food", 
+              "https://edition.cnn.com/travel/article/middle-east-food-dishes/index.html", 
+              "https://edition.cnn.com/travel/article/classic-french-dishes-wellness/index.html", 
+              "https://www.willflyforfood.net/spanish-food-guide/", 
+              "https://www.southernliving.com/food/dish/famous-southern-food-recipes") 
+) 
+
+# Define UI 
+ui <- dashboardPage( 
+  dashboardHeader( 
+    title = "NY FOOD ANALYSIS", 
+    tags$li( 
+      class = "dropdown", 
+      tags$a( 
+        "Main Dashboard", 
+        href = "#", 
+        icon("home"), 
+        style = "font-weight: bold; font-size: 18px;color: #ffffff;" 
+      ) 
+    ) 
+  ), 
+  
+  dashboardSidebar( 
+    width = 250, 
+    tags$head( 
+      tags$style(HTML(" 
+        .skin-blue .main-header .logo { 
+          background-color: #64B2E8; 
+          color: white; 
+          font-weight: bold; 
+        } 
+        .skin-blue .main-header .logo:hover { 
+          background-color: #64B2E8; 
+        } 
+        .skin-blue .main-header .navbar { 
+          background-color:  #64B2E8; 
+        } 
+        .skin-blue .main-sidebar { 
+          background-color: #F9CF65; 
+        } 
+        .skin-blue .main-sidebar .sidebar .sidebar-menu .active a { 
+          background-color:  #64B2E8; 
+          color: white; 
+        } 
+        .skin-blue .main-sidebar .sidebar .sidebar-menu a { 
+          color: white; 
+        } 
+        .skin-blue .main-sidebar .sidebar .sidebar-menu a:hover {
+          background-color: #64B2E8; 
+          color: white; 
+        } 
+        .content-wrapper, .right-side { 
+          background-color: #FFFFFF; 
+        } 
+        
+        .box-custom {
+          background-color: #3c8dbc !important;
+        }
+      ")) 
+    ), 
+
+    sidebarMenu( 
+      menuItem("MAIN DASHBOARD", tabName = "main_dashboard", icon = icon("dashboard")), 
+      menuItem("TOP 5 RANKING", tabName = "top_ranking", icon = icon("trophy")), 
+      menuItem("GRAPH DISTRIBUTION", tabName = "graph_distribution", icon = icon("chart-bar")), 
+      menuItem("COMMUNITY", tabName = "community", icon = icon("users")), 
+      menuItem("ABOUT US", tabName = "about_us", icon = icon("info-circle")), 
+      menuItem("ABOUT THIS PROJECT", tabName = "about_project", icon = icon("project-diagram")),
+      menuItem("ACKNOWLEDGEMENTS", tabName = "acknowledgements", icon = icon("handshake"))
+    ) 
+  ), 
+
+  dashboardBody( 
+    useShinyjs(), 
+    tabItems( 
+      # Main Dashboard Tab 
+      tabItem(tabName = "main_dashboard", 
+              fluidRow( 
+                valueBoxOutput("total_customers"), 
+                valueBoxOutput("total_sale"), 
+                valueBoxOutput("top_pick") 
+              ), 
+              fluidRow( 
+                column( 
+                  width = 12, 
+                  tags$h2( 
+                    "Cuisine", 
+                    style = "background-color: #3c8dbc; padding: 10px; text-align: center; margin-bottom: 20px; font-weight: bold;" 
+                  ) 
+                ) 
+              ), 
+              
+              fluidRow( 
+                lapply(1:nrow(restaurants), function(i) { 
+                  column( 
+                    width = 2,
+                    box( 
+                      title = restaurants$Cuisine[i], 
+                      status = "primary", 
+                      solidHeader = TRUE,
+                      width = 12,
+                      tags$div( 
+                        style = "text-align: center; margin-bottom: 20px;", 
+                        img(src = restaurants$ImageURL[i], width = "100", height = "100"), 
+                        actionButton( 
+                          inputId = paste0("btn_", i), 
+                          label = "visit website", 
+                          onclick = paste0("Shiny.onInputChange('web_clicked_', ", i, ")") 
+                        ) 
+                      ) 
+                    )
+                  ) 
+                }) 
+              ) 
+      ), 
+
+      # TOP 5 RANKING content 
+      tabItem(tabName = "top_ranking", 
+              fluidPage( 
+                titlePanel("TOP 5 RANKING"), 
+                mainPanel( 
+                  tabsetPanel( 
+                    tabPanel("Cuisine Champions", 
+                             plotlyOutput("top_graph1"), 
+                             dataTableOutput("table_data1")), 
+                    tabPanel("5 Star Favourite Restaurant", 
+                             plotlyOutput("top_graph2")), 
+                    tabPanel("Flavours of Excellent", 
+                             plotlyOutput("piechart"), 
+                             dataTableOutput("table")), 
+                    tabPanel("Speedy Eats", 
+                             fluidRow( 
+                               column(6, plotlyOutput("boxplot_delivery")), 
+                               column(6, plotlyOutput("boxplot_preparation")) 
+                             )) 
+                  ) 
+                ) 
+              ) 
+      ), 
+
+      # GRAPH DISTRIBUTION content 
+      tabItem(tabName = "graph_distribution", 
+              fluidRow( 
+                tabBox( 
+                  title = "Graph Distribution", 
+                  id = "tabset1", width = 12, 
+                  tabPanel("Order Trends", plotOutput("barChartPlot")), 
+                  tabPanel("Flavours Landscape", plotlyOutput("horizontalBarChartPlot", height = "600px", width = "1000px")), 
+                  tabPanel("Budget Breakdown", plotlyOutput("histogramPlot", height = "600px", width = "1000px")), 
+                  tabPanel("Cuisine Cost on Weekday vs Weekend", plotlyOutput("sideBySidePlot", height = "600px", width = "1500px")) 
+                ) 
+              )), 
+
+      # COMMUNITY content 
+      tabItem(tabName = "community", 
+              fluidRow( 
+                box(title = "Food Lover Feedback", status = "primary", solidHeader = TRUE, width = 12, 
+                    textInput("username", "Your Name:"), 
+                    textAreaInput("review", "Your Review:", rows = 5), 
+                    actionButton("submit", "SUBMIT FEEDBACK"), 
+                    br(), 
+                    DTOutput("feedback_table") 
+                ) 
+              )), 
+
+      # ABOUT US content 
+      tabItem(
+        tabName = "about_us",
+        fluidRow(
+          column(
+            width = 12,
+            tags$div(
+              style = "padding: 8px;",
+              tags$h4(
+                style = "font-weight: bold; font-size: 30px;",
+                "FEEL FREE TO KNOW US <3"
+                )
+              )
+            )
+          ),
+        
+        tabBox(
+          id = "t5",
+          width = 11.5,
+          tabPanel(
+            "Group Members",
+            div(
+              style = "display: flex; justify-content: center; flex-direction: column; align-items: center;",
+              tags$img(src="https://scontent-kul2-1.xx.fbcdn.net/v/t39.30808-1/364142152_664166709076441_4327065373427317586_n.jpg?stp=dst-jpg_p200x200&_nc_cat=106&ccb=1-7&_nc_sid=5f2048&_nc_ohc=GRduZZWIfOMQ7kNvgHBk_Bq&_nc_ht=scontent-kul2-1.xx&oh=00_AYANPJnioJju8QkRhLtxdQcVa862mwB1kvJJJZwGFLs6Hw&oe=666936A4",
+                       style = "max-width: 30%; max-height: 30%;"),
+              tags$p(
+                style = "text-align: center; margin-top: 5px; margin-bottom: 5px; font-family: 'Gill Sans', sans-serif; font-weight: bold; font-size: 25px;",
+                HTML("This project has been developed by 2024 Data Analytics students from <br> University Malaysia Pahang Al-Sultan Abdullah."),
+                tags$br(),
+                tags$br(),
+                
+                )
+              ),
+            fluidRow(
+              column(
+                width = 3,
+                tags$div(
+                  class = "group-members",
+                  tags$img(
+                    src = "https://media.licdn.com/dms/image/D4E03AQHCU0WQfJkUsA/profile-displayphoto-shrink_800_800/0/1717820918670?e=1723075200&v=beta&t=6quly98d9I_vcaSWJMJOta34jd5CCKZYTUL7kJj1jzY",
+                    style = "max-width: 100%; max-height: 100%;"
+                    ),
+                  tags$p(class = "text-center", style = "font-weight: bold; font-size: 20px;", "NUR SABIHAH BINTI ANUAR"),
+                  tags$p(class = "text-center", style = "font-weight: bold; font-size: 17px;", "SD22019")
+                  )
+                ),
+              
+              column(
+                width = 3,
+                tags$div(
+                  class = "group-members",
+                  tags$img(
+                    src = "https://media.licdn.com/dms/image/D5603AQFrMTWLcM-67w/profile-displayphoto-shrink_800_800/0/1713536632107?e=1723075200&v=beta&t=YzcDyyMpsC_Thwo2oRSVEYImT5iPcvUKArQ7cxK8rtM",
+                    style = "max-width: 100%; max-height: 100%;"
+                    ),
+                  tags$p(class = "text-center", style = "font-weight: bold; font-size: 20px;", "ANIS AQILAH BINTI MOHD ASRI"),
+                  tags$p(class = "text-center", style = "font-weight: bold; font-size: 17px;", "SD22031")
+                  )
+                ),
+              
+              column(
+                width = 3,
+                tags$div(
+                  class = "group-members",
+                  tags$img(
+                    src = "https://media.licdn.com/dms/image/D5603AQFa_qX4wvIDDQ/profile-displayphoto-shrink_800_800/0/1690444234677?e=1723075200&v=beta&t=bveKvDJgyqA5hu1ih8hehnlOE0ha9h7uBaa6Ct9XVCc",
+                    style = "max-width: 100%; max-height: 100%;"
+                    ),
+                  tags$p(class = "text-center", style = "font-weight: bold; font-size: 20px;", "HAWA HUMAIRA BINTI HAMUZAN"),
+                  tags$p(class = "text-center", style = "font-weight: bold; font-size: 17px;", "SD22043 ")
+                  )
+                ),
+              
+              column(
+                width = 3,
+                tags$div(
+                  class = "group-members",
+                  tags$img(
+                    src = "https://media.licdn.com/dms/image/D5603AQHtQj-djxX_qQ/profile-displayphoto-shrink_800_800/0/1684330171808?e=1723075200&v=beta&t=10AfeykAUXZ-8Y-l0IwQdB2VxukXxweOteLYrWloc3o",
+                    style = "max-width: 100%; max-height: 100%;"
+                    ),
+                  tags$p(class = "text-center", style = "font-weight: bold; font-size: 20px;", "AINA ISMA NAJWA BINTI AZARZAINI"),
+                  tags$p(class = "text-center", style = "font-weight: bold; font-size: 17px;", "SD21019")
+                  )
+                )
+              )
+            )
+          )
+        ),
+
+      # ABOUT THIS PROJECT content
+      tabItem(tabName = "about_project",
+              fluidRow(
+                box(title = "About This Project", status = "primary", solidHeader = TRUE, width = 12,
+                    tags$div(
+                      style = "border: 2px solid black; padding: 10px; text-align: center; font-size: 20px;",
+                      "Welcome to our R shiny dashboard, where we Unravel the New York City Restaurant Food Ordering & Delivery service. As part of our Data Science Programming 2 course, we embarked on a journey to explore the dynamic of this online food ordering using the powerful capabilities of R languages and R shiny.",
+                      tags$br(), tags$br(),
+                      "Objectives of this project is to :",
+                      tags$ul(
+                        tags$li("UNDERSTANDING CONSUMER BEHAVIOR"),
+                        tags$li("OPTIMIZING OPERATIONAL EFFICIENCY"),
+                        tags$li("PREDICTING FUTURE TRENDS")
+                      ),
+                      tags$br(),
+                      "Our projects hold immense significance for restaurant companies operating in New York City by providing them with invaluable insight about strategic decision making, enhanced customer experience and competitive advantage. We hope our dashboard serves as a valuable resource for stakeholders across the restaurant industry, driving innovation, and fostering growth.",
+                      tags$br(), tags$br(),
+                      "Thank you for joining us on this journey!"
+                    )))),
+      
+      #ACKNOWLEGEMENT content
+      tabItem(tabName = "acknowledgements",
+        fluidRow(
+          box(
+            title = "A Love Letter for Dr. Ros <3",
+            status = "primary",
+            solidHeader = TRUE,
+            width = 12,
+            tags$div(
+              class = "container-fluid",
+              tags$h2("Dear Prof. Dr. Roslinazairimah Zakaria"),
+              tags$img(
+                src = "https://psm.umpsa.edu.my/images/staff_profile_half_2024/ROSLINA.png",
+                alt = "Website Image",
+                style = "display: block; margin-left: auto; margin-right: auto; margin-bottom: 20px;"
+              ),
+              tags$div(
+                style = "text-align: center; padding: 50px;",
+                tags$p(
+                  style = "font-size: 20px;",
+                  "Dear Prof. Dr. Roslinazairimah Zakaria,",
+                  tags$br(),
+                  tags$br(),
+                  "We hope you are well.",
+                  tags$br(),
+                  tags$br(),
+                  "As our 14-week course ends, we want to thank you for your wonderful guidance and support. Your kindness and advice, both for studies and life, have helped us a lot.",
+                  tags$br(),
+                  tags$br(),
+                  "We are very grateful for all the R language knowledge you have taught us and for inviting Dr. Rado Yendra from Indonesia to teach us more. We want you to know that this project is a combination of the knowledge you taught in class and what we explored ourselves. We will definitely use this knowledge in the future.",
+                  tags$br(),
+                  tags$br(),
+                  "We are sad to hear about your upcoming retirement, but we wish you a happy and restful retirement. May you be blessed with health and wealth.",
+                  tags$br(),
+                  tags$br(),
+                  "Thank you, Dr. Ros, for everything.",
+                  tags$br(),
+                  tags$br(),
+                  "With thanks,",
+                  "Sabihah, Anis, Hawa, & Aina"
+                  )))))))))
+
+# Define server logic 
+server <- function(input, output) { 
+  # Calculate total customers and total sales 
+  total_customers <- nrow(food_order) 
+  total_sales <- sum(food_order$cost_of_the_order, na.rm = TRUE) 
+
+  output$total_customers <- renderValueBox({ 
+    valueBox( 
+      value = total_customers, 
+      subtitle = "Total Customers", 
+      icon = icon("users"), 
+      color = "light-blue" 
+    ) 
+  })
+  
+  output$total_sale <- renderValueBox({
+    valueBox(
+      value = paste0("$", format(round(total_sales), big.mark = ",", scientific = FALSE)), 
+      subtitle = "Total Sales", 
+      icon = icon("dollar-sign"), 
+      color = "yellow" 
+      )
+    })
+
+  output$top_pick <- renderValueBox({ 
+    valueBox( 
+      value = "America", 
+      subtitle = "Top Pick Cuisine", 
+      icon = icon("flag-usa"), 
+      color = "light-blue" 
+    ) 
+  }) 
+
+  observeEvent(input$web_clicked_, { 
+    clicked_id <- input$web_clicked_ 
+    if (!is.null(clicked_id)) { 
+      jscode <- paste0("window.open('", restaurants$Website[as.numeric(clicked_id)], "', '_self');") 
+      runjs(jscode) 
+    } 
+  }) 
+
+  # Bar Chart Plot 
+  data <- food_order %>% 
+    filter(!is.na(day_of_the_week) & day_of_the_week != "") 
+  
+  order_summary <- data %>% 
+    group_by(day_of_the_week) %>% 
+    summarize(order_count = n()) 
+  pastel_colors <- c("yellow", "orange") 
+  output$barChartPlot <- renderPlot({
+  ggplot(order_summary, aes(x = day_of_the_week, y = order_count, fill = day_of_the_week)) + 
+    geom_bar(stat = "identity") + 
+    geom_text(aes(label = order_count), vjust = -0.5, size = 4) + # Adjust vjust for the gap and size for font size
+    labs(title = "Order Count: Weekend vs Weekday", 
+         x = "Day Type", 
+         y = "Order Count") + 
+    theme_minimal() + 
+    scale_fill_manual(values = pastel_colors) + 
+    theme(panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank())
+}) 
+
+    # Horizontal Bar Chart Plot 
+  agg_data_hbar <- data %>% 
+    group_by(cuisine_type) %>% 
+    summarise(num_restaurants = n_distinct(restaurant_name), .groups = 'drop') 
+  pastel_colors <- c("orange", "#FFDFBA", "#FFFFBA", "#BAFFC9", "#BAE1FF", "#D7BDE2", "#F7DC6F", "#F0B27A", "#D5DBDB", "#AED6F1", "coral", "gold", "purple", "red") 
+  output$horizontalBarChartPlot <- renderPlotly({ 
+    p <- ggplot(agg_data_hbar, aes(x = num_restaurants, y = reorder(cuisine_type, num_restaurants), fill = cuisine_type, text = paste("Number of Restaurants: ", num_restaurants))) + 
+      geom_bar(stat = "identity") + 
+      geom_text(aes(label = num_restaurants), 
+                position = position_stack(vjust = 0.5), size = 3) + 
+      scale_fill_manual(values = pastel_colors) + 
+      labs(title = "Number of Restaurants by Cuisine Type", 
+           x = "Number of Restaurants", 
+           y = "Cuisine Type") + 
+      theme_minimal() + 
+      theme(legend.position = "none", panel.grid.major =
+              element_blank(), panel.grid.minor = element_blank())
+    ggplotly(p, tooltip = "text") 
+  }) 
+
+  # Histogram Plot 
+  output$histogramPlot <- renderPlotly({ 
+    p <- ggplot(data, aes(x = cost_of_the_order)) + 
+      geom_histogram(aes(fill = ..count..), binwidth = 5, color = "white", alpha = 0.7) + 
+      # Calculate counts manually and add as text annotations
+      stat_bin(aes(y = ..count.., label = ..count..), binwidth = 5, geom = "text", 
+               vjust = -0.5, position = position_stack(vjust = 0.5)) +
+      scale_fill_gradient(low = "yellow", high = "orange") + 
+      labs(title = "Distribution of Cost of the Order", 
+           x = "Cost of the Order", 
+           y = "Count of Customer") + 
+      theme_minimal() + 
+      theme(panel.grid.major = element_blank(), 
+            panel.grid.minor = element_blank())
+    ggplotly(p) 
+  }) 
+
+  # Side-by-Side Bar Chart Plot 
+agg_data_side <- data %>% 
+  group_by(cuisine_type, day_of_the_week) %>% 
+  summarise(total_cost = sum(cost_of_the_order), .groups = 'drop') 
+
+output$sideBySidePlot <- renderPlotly({ 
+  p <- ggplot(agg_data_side, aes(x = cuisine_type, y = total_cost, fill = day_of_the_week, 
+                                 text = paste("Total Cost: $", round(total_cost, 2)))) + 
+    geom_bar(stat = "identity", position = position_dodge()) + 
+    geom_text(aes(label = paste("$", round(total_cost, 2)), 
+                  y = total_cost + max(total_cost) * 0.05),  # Adding a buffer for white space
+              position = position_dodge(width = 0.9), vjust = -0.5, size = 3) + 
+    labs(title = "Total Cost of Orders weekday vs weekend", 
+         x = "Cuisine Type",
+         y = "Total Cost of Orders") + 
+    theme_minimal() + 
+    scale_fill_manual(values = c("Weekday" = "yellow", "Weekend" = "orange")) +
+    theme(panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank())
+
+  ggplotly(p, tooltip = "text")
+})
+
+  # Display submitted feedback in a table 
+  feedback_data <- reactive({ 
+    if (!is.null(input$submit) && input$submit > 0) { 
+      data.frame(Name = input$username, Review = input$review) 
+    } else { 
+      data.frame(Name = character(), Review = character()) 
+    } 
+  }) 
+
+  output$feedback_table <- renderDT({ 
+    feedback_data() 
+  }) 
+  
+  # Tab 1: Bar Chart for Top 5 Cuisine Types by Rating of 5 
+  filteredData1 <- reactive({ 
+    top_cuisines <- food_order %>% 
+      filter(rating == 5) %>% 
+      group_by(cuisine_type) %>% 
+      summarise(total_rating_5_count = n()) %>% 
+      arrange(desc(total_rating_5_count)) %>% 
+      head(5) 
+    top_cuisines 
+  }) 
+  
+  output$top_graph1 <- renderPlotly({ 
+    data <- filteredData1() 
+    plot_ly(data, x = ~reorder(cuisine_type, -total_rating_5_count), y = ~total_rating_5_count, type = "bar", color = ~cuisine_type, colors = "Set3") %>% 
+      layout(title = list(text = "<b>Bar Chart: Top 5 Cuisine Types by Rate 5</b>", font = list(size = 15)), 
+             xaxis = list(title = "<b>Cuisine Type<b>", showgrid = FALSE), 
+             yaxis = list(title = "<b>Total Rating of 5<b>", showgrid = FALSE), 
+             barmode = "group") %>% 
+      add_text(text = ~total_rating_5_count, position = "top", showlegend = FALSE, textfont = list(color = "black"), y = ~total_rating_5_count + 3.0)  
+  }) 
+  
+  output$table_data1 <- renderDataTable({ 
+    data <- filteredData1() 
+    restaurant_data <- food_order %>% 
+      filter(rating == 5) %>% 
+      group_by(cuisine_type, restaurant_name) %>% 
+      summarise(total_rating_5_count = n()) %>% 
+      filter(cuisine_type %in% data$cuisine_type) %>% 
+      arrange(cuisine_type, restaurant_name) 
+    restaurant_data 
+  }) 
+
+  # Tab 2: Bar chart for Top 5 Restaurants by Rating of 5 
+  filteredData2 <- reactive({ 
+    top_restaurants <- food_order %>% 
+      filter(rating == 5) %>% 
+      group_by(restaurant_name, cuisine_type) %>% 
+      summarise(total_rating_5_count = n()) %>% 
+      arrange(desc(total_rating_5_count)) %>% 
+      head(5) 
+    top_restaurants 
+  }) 
+
+  output$top_graph2 <- renderPlotly({ 
+    data <- filteredData2() 
+    plot_ly(data, x = ~reorder(restaurant_name, -total_rating_5_count), y = ~total_rating_5_count, type = "bar", color = ~restaurant_name, colors = "Set3", name = ~paste(restaurant_name, " - ", cuisine_type)) %>% 
+      layout(title = list(text = "<b>Bar chart: Top 5 Restaurants by Rate 5 </b>", font = list(size = 15)),
+             xaxis = list(title = "<b>Restaurant Name<b>", showgrid = FALSE),
+             yaxis = list(title = "<b>Total Rating of 5<b>", showgrid = FALSE), 
+             barmode = "group") %>% 
+      add_text(text = ~total_rating_5_count, position = "top", showlegend = FALSE, textfont = list(color = "black"), y = ~total_rating_5_count + 3.0) 
+  }) 
+  
+  # Tab 3: Pie Chart for Top 5 Cuisine Types by Total Orders 
+  filteredData3 <- reactive({ 
+    top_cuisines <- food_order %>% 
+      group_by(cuisine_type) %>% 
+      summarise(total_orders = n()) %>% 
+      arrange(desc(total_orders)) %>% 
+      head(5) %>% 
+      pull(cuisine_type) 
+    food_order %>% 
+      filter(cuisine_type %in% top_cuisines) %>% 
+      arrange(desc(order_id)) 
+  }) 
+
+  output$piechart <- renderPlotly({ 
+    data <- filteredData3() 
+    plot_ly(data, labels = ~cuisine_type, values = ~order_id, type = "pie", marker = list(colors = c("#87CEEB", "#FFA07A", "#7B68EE", "#F08080", "#90EE90"))) %>% 
+      layout(title = list(text = "<b>Pie Chart: Top 5 Cuisine by Total Orders</b>", font = list(size = 15)),
+             textinfo = "label+percent") 
+  }) 
+
+  output$table <- renderDataTable({ 
+    data <- filteredData3() 
+    data %>% 
+      select(cuisine_type, restaurant_name) %>% 
+      distinct() %>% 
+      arrange(cuisine_type, restaurant_name) 
+  }) 
+  
+  # Tab 4: Boxplots for Fastest Delivery and Food Preparation Time 
+  filteredDeliveryData <- reactive({ 
+    top_cuisines_delivery <- food_order %>% 
+      group_by(cuisine_type) %>% 
+      summarise(avg_delivery_time = mean(delivery_time, na.rm = TRUE)) %>% 
+      arrange(avg_delivery_time) %>% 
+      head(5) %>% 
+      pull(cuisine_type) 
+
+    food_order %>% 
+      filter(cuisine_type %in% top_cuisines_delivery) %>% 
+      arrange(desc(delivery_time)) 
+  }) 
+  
+  output$boxplot_delivery <- renderPlotly({ 
+    data <- filteredDeliveryData() 
+    plot_ly(data, x = ~cuisine_type, y = ~delivery_time, type = "box", color = ~cuisine_type, colors = "Set3") %>% 
+      layout(title = list(text = "<b>Boxplots: Fastest Delivery Times</b>", font = list(size = 15)),
+             xaxis = list(title = "<b>Cuisine Type<b>", showgrid = FALSE), 
+             yaxis = list(title = "<b>Delivery Time (min)<b>", showgrid = FALSE), 
+             legend = list(orientation = "v", x = 1, y = 1, xanchor = "left", yanchor = "top"), 
+             margin = list(l = 50, r = 50, b = 100, t = 100)) 
+  }) 
+
+  filteredPreparationData <- reactive({ 
+    top_cuisines_preparation <- food_order %>% 
+      group_by(cuisine_type) %>% 
+      summarise(avg_food_preparation_time = mean(food_preparation_time, na.rm = TRUE)) %>% 
+      arrange(avg_food_preparation_time) %>% 
+      head(5) %>% 
+      pull(cuisine_type) 
+     
+    food_order %>% 
+      filter(cuisine_type %in% top_cuisines_preparation) %>% 
+      arrange(desc(food_preparation_time)) 
+  }) 
+
+  output$boxplot_preparation <- renderPlotly({ 
+    data <- filteredPreparationData() 
+    plot_ly(data, x = ~cuisine_type, y = ~food_preparation_time, type = "box", color = ~cuisine_type, colors = "Set3") %>% 
+      layout(title = list(text = "<b>Boxplots: Food Preparation Times</b>", font = list(size = 15)),
+             xaxis = list(title = "<b>Cuisine Type<b>", showgrid = FALSE), 
+             yaxis = list(title = "<b>Food Preparation Time (min)<b>", showgrid = FALSE), 
+             legend = list(orientation = "v", x = 1, y = 1, xanchor = "left", yanchor = "top"), 
+             margin = list(l = 50, r = 50, b = 100, t = 100)) 
+  }) 
+} 
+
+# Run the application  
+shinyApp(ui = ui, server = server) 
+```
+
